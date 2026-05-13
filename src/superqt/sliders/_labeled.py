@@ -811,6 +811,21 @@ class SliderLabel(QLineEdit):
         with signals_blocked(self):
             self.clearFocus()
 
+    def _format_value_for_size(self, val: float) -> str:
+        """Format val as updateText() would, for width-sizing purposes."""
+        val = float(val)
+        use_scientific = (abs(val) < 0.0001 or abs(val) > 9999999.0) and val != 0.0
+        if self._decimals < 0:
+            # auto mode: use a reasonable fixed precision for size estimation
+            if use_scientific:
+                return f"{val:.4e}"
+            return f"{val:.4f}".rstrip("0").rstrip(".") or "0"
+        if use_scientific:
+            mantissa, exponent = f"{val:.{self._decimals}e}".split("e")
+            mantissa = mantissa.rstrip("0").rstrip(".")
+            return f"{mantissa}e{exponent}"
+        return f"{val:.{self._decimals}f}"
+
     def _get_size(self):
         # fontmetrics to measure the width of text
         fm = QFontMetrics(self.font())
@@ -818,15 +833,16 @@ class SliderLabel(QLineEdit):
         fixed_content = self.prefix() + self.suffix() + " "
 
         if self._mode & EdgeLabelMode.LabelIsValue:
-            # determine width based on min/max/specialValue
-            mintext = str(self.minimum())[:18]
-            maxtext = str(self.maximum())[:18]
+            # determine width based on min/max/specialValue, formatted with
+            # the current decimal precision so the size accounts for decimals
+            mintext = self._format_value_for_size(self.minimum())[:18]
+            maxtext = self._format_value_for_size(self.maximum())[:18]
             w = max(0, _fm_width(fm, mintext + fixed_content))
             w = max(w, _fm_width(fm, maxtext + fixed_content))
             if self._mode & EdgeLabelMode.LabelIsRange:
                 w += 8  # it seems as thought suffix() is not enough
         else:
-            w = max(0, _fm_width(fm, str(self.value()))) + 3
+            w = max(0, _fm_width(fm, self._format_value_for_size(self.value()))) + 3
 
         w += 3  # cursor blinking space
         # get the final size hint

@@ -3,8 +3,15 @@ from typing import Any
 from unittest.mock import Mock
 
 import pytest
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QFontMetrics
 
-from superqt import QLabeledDoubleSlider, QLabeledRangeSlider, QLabeledSlider
+from superqt import (
+    QLabeledDoubleRangeSlider,
+    QLabeledDoubleSlider,
+    QLabeledRangeSlider,
+    QLabeledSlider,
+)
 
 
 def test_labeled_slider_api(qtbot):
@@ -132,3 +139,41 @@ def test_slider_label_decimals_update_text(qtbot):
 
     slider.setDecimals(4)
     assert slider._label.text() == "3.1416"
+
+
+def test_labeled_double_range_slider_label_width(qtbot):
+    """Regression test for issue #335: label widths must fit their formatted value.
+
+    When using integer-valued ranges (e.g. -1..1) with non-zero decimals, the
+    old code measured width from str(-1) == "-1" rather than the formatted
+    "-1.00", causing the labels to be too narrow and clip the displayed text.
+    """
+    slider = QLabeledDoubleRangeSlider(Qt.Orientation.Horizontal)
+    qtbot.addWidget(slider)
+    slider.show()
+    qtbot.waitExposed(slider)
+
+    slider.setRange(-1, 1)
+    slider.setValue((-0.5, 0.5))
+
+    def _text_fits(label):
+        fm = QFontMetrics(label.font())
+        if hasattr(fm, "horizontalAdvance"):
+            text_w = fm.horizontalAdvance(label.text())
+        else:
+            text_w = fm.width(label.text())
+        return label.width() >= text_w
+
+    # Check edge labels (LabelIsRange mode) and handle labels (LabelIsValue mode)
+    for lbl in [slider._min_label, slider._max_label, *slider._handle_labels]:
+        assert _text_fits(lbl), (
+            f"Label '{lbl.text()}' (width={lbl.width()}) is too narrow for its text"
+        )
+
+    # Repeat with explicit decimals > 0 (the common failure case from the issue)
+    slider.setDecimals(5)
+    slider.setValue((-0.5, 0.5))
+    for lbl in [slider._min_label, slider._max_label, *slider._handle_labels]:
+        assert _text_fits(lbl), (
+            f"Label '{lbl.text()}' (width={lbl.width()}) is too narrow"
+        )

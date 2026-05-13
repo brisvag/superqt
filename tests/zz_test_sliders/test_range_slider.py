@@ -256,6 +256,26 @@ def test_rangeslider_signals(cls, orientation, qtbot):
     _assert_types(mock.call_args.args, type_)
 
 
+def test_qss_bar_no_extra_border(qtbot):
+    """Regression test: inner bar must not show a border when QSS is active.
+
+    With a stylesheet applied, RangeSliderStyle.pen() was incorrectly falling
+    back to the SYSTEM_STYLE pen (e.g. '#286384' on Linux), causing an unwanted
+    outline around the inner bar.  The fix makes it return NoPen when
+    has_stylesheet is True and no explicit pen was extracted from the QSS.
+    """
+    sld = QRangeSlider(Qt.Orientation.Horizontal)
+    qtbot.addWidget(sld)
+
+    opt = QStyleOptionSlider()
+    sld.initStyleOption(opt)
+
+    # With has_stylesheet=True and no explicit pen color extracted from QSS,
+    # pen() must return NoPen rather than falling back to SYSTEM_STYLE's pen.
+    sld._style.has_stylesheet = True
+    assert sld._style.pen(opt) == Qt.PenStyle.NoPen
+
+
 @pytest.mark.parametrize("cls, orientation", ALL_SLIDER_COMBOS)
 def test_range_slider_with_equal_min_max(cls, orientation, qtbot):
     """Test that slider works when min == max (issue #307).

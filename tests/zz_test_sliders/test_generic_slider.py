@@ -108,14 +108,21 @@ def test_qss_sub_page_rendering(qtbot):
     )
 
     y = groove.center().y()
-    left_x = int((groove.left() + handle.left()) / 2)
-    right_x = int((handle.right() + groove.right()) / 2)
+    # sample midpoint in the sub-page region (left of handle)
+    sub_page_sample_x = int((groove.left() + handle.left()) / 2)
+    # sample midpoint in the add-page/groove region (right of handle)
+    add_page_sample_x = int((handle.right() + groove.right()) / 2)
 
     img = gslider.grab().toImage()
-    left = img.pixelColor(left_x, y)
-    right = img.pixelColor(right_x, y)
-    assert left.green() > left.red() and left.green() > left.blue()
-    assert right.red() < right.green() and right.red() < right.blue()
+    sub_page_color = img.pixelColor(sub_page_sample_x, y)
+    add_page_color = img.pixelColor(add_page_sample_x, y)
+    # sub-page is rgb(0, 255, 0) — green dominant
+    assert sub_page_color.green() > sub_page_color.red()
+    assert sub_page_color.green() > sub_page_color.blue()
+    # add-page falls through to groove rgb(0,255,255) — cyan: low red, equal green/blue
+    assert add_page_color.green() > add_page_color.red()
+    assert add_page_color.blue() > add_page_color.red()
+    assert abs(add_page_color.green() - add_page_color.blue()) < 10
 
 
 @pytest.mark.skipif(platform.system() != "Darwin", reason="cross-platform is tricky")

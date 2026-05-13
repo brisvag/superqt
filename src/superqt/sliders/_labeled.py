@@ -666,6 +666,9 @@ class QLabeledDoubleRangeSlider(QLabeledRangeSlider):
 class SliderLabel(QLineEdit):
     valueEdited = Signal(float)
 
+    _SCIENTIFIC_MIN = 0.0001
+    _SCIENTIFIC_MAX = 9999999.0
+
     def __init__(
         self,
         slider: QSlider,
@@ -737,7 +740,9 @@ class SliderLabel(QLineEdit):
 
     def updateText(self) -> None:
         val = float(self._value)
-        use_scientific = (abs(val) < 0.0001 or abs(val) > 9999999.0) and val != 0.0
+        use_scientific = (
+            abs(val) < self._SCIENTIFIC_MIN or abs(val) > self._SCIENTIFIC_MAX
+        ) and val != 0.0
         font_metrics = QFontMetrics(self.font())
         eight_len = _fm_width(font_metrics, "8")
 

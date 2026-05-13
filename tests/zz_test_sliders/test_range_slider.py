@@ -266,13 +266,14 @@ def test_qss_bar_no_extra_border(qtbot):
     """
     sld = QRangeSlider(Qt.Orientation.Horizontal)
     qtbot.addWidget(sld)
+    sld.resize(200, 30)
+    sld.show()
+    qtbot.waitExposed(sld)
+    sld.setStyleSheet("QSlider::groove:horizontal { height: 6px; background: #aaa; }")
 
     opt = QStyleOptionSlider()
     sld.initStyleOption(opt)
-
-    # With has_stylesheet=True and no explicit pen color extracted from QSS,
-    # pen() must return NoPen rather than falling back to SYSTEM_STYLE's pen.
-    sld._style.has_stylesheet = True
+    assert sld._style.has_stylesheet
     assert sld._style.pen(opt) == Qt.PenStyle.NoPen
 
 

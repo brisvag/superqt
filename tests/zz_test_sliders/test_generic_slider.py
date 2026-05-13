@@ -74,6 +74,50 @@ def test_show(gslider, qtbot):
     gslider.show()
 
 
+def test_qss_sub_page_rendering(qtbot):
+    gslider = _GenericSlider(Qt.Orientation.Horizontal)
+    qtbot.addWidget(gslider)
+    gslider.resize(200, 30)
+    gslider.setRange(0, 100)
+    gslider.setValue(50)
+    gslider.setStyleSheet(
+        """
+        QSlider::groove:horizontal {
+            background-color: rgb(0, 255, 255);
+            height: 10px;
+        }
+        QSlider::handle:horizontal {
+            background-color: rgb(255, 0, 255);
+            width: 10px;
+        }
+        QSlider::sub-page:horizontal {
+            background-color: rgb(0, 255, 0);
+        }
+        """
+    )
+    gslider.show()
+    qtbot.waitExposed(gslider)
+
+    opt = QStyleOptionSlider()
+    gslider.initStyleOption(opt)
+    groove = gslider.style().subControlRect(
+        QStyle.ComplexControl.CC_Slider, opt, QStyle.SubControl.SC_SliderGroove, gslider
+    )
+    handle = gslider.style().subControlRect(
+        QStyle.ComplexControl.CC_Slider, opt, QStyle.SubControl.SC_SliderHandle, gslider
+    )
+
+    y = groove.center().y()
+    left_x = int((groove.left() + handle.left()) / 2)
+    right_x = int((handle.right() + groove.right()) / 2)
+
+    img = gslider.grab().toImage()
+    left = img.pixelColor(left_x, y)
+    right = img.pixelColor(right_x, y)
+    assert left.green() > left.red() and left.green() > left.blue()
+    assert right.red() < right.green() and right.red() < right.blue()
+
+
 @pytest.mark.skipif(platform.system() != "Darwin", reason="cross-platform is tricky")
 def test_press_move_release(gslider: _GenericSlider, qtbot):
     # this fail on vertical came with pyside6.2 ... need to debug

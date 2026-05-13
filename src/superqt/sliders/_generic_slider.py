@@ -300,8 +300,9 @@ class _GenericSlider(QSlider):
         painter = QStylePainter(self)
         opt = self._styleOption
 
-        # draw groove and ticks
-        opt.subControls = SC_GROOVE
+        # draw groove, page segments, and ticks
+        # include handle here so stylesheets can draw sub/add-page regions
+        opt.subControls = SC_GROOVE | SC_HANDLE
         if opt.tickPosition != QSlider.TickPosition.NoTicks:
             opt.subControls |= SC_TICKMARKS
         painter.drawComplexControl(CC_SLIDER, opt)

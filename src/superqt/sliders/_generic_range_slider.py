@@ -28,6 +28,7 @@ class _GenericRangeSlider(_GenericSlider):
     integers.
     """
 
+    _draw_handle_in_complex = False
     # Emitted when the slider value has changed, with the new slider values
     valuesChanged = Signal(tuple)
     # this is just a hack to allow napari v0.4.19 tests to pass)

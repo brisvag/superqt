@@ -60,6 +60,7 @@ USE_MAC_SLIDER_PATCH = (
 
 
 class _GenericSlider(QSlider):
+    _draw_handle_in_complex = True
     fvalueChanged = Signal(float)
     fsliderMoved = Signal(float)
     frangeChanged = Signal(float, float)
@@ -300,11 +301,22 @@ class _GenericSlider(QSlider):
         painter = QStylePainter(self)
         opt = self._styleOption
 
-        # draw groove and ticks
-        opt.subControls = SC_GROOVE
-        if opt.tickPosition != QSlider.TickPosition.NoTicks:
-            opt.subControls |= SC_TICKMARKS
-        painter.drawComplexControl(CC_SLIDER, opt)
+        # draw groove and ticks (and handle if supported)
+        if self._draw_handle_in_complex:
+            opt.subControls = SC_GROOVE | SC_HANDLE
+            if opt.tickPosition != QSlider.TickPosition.NoTicks:
+                opt.subControls |= SC_TICKMARKS
+            if self._pressedControl:
+                opt.activeSubControls = self._pressedControl
+                opt.state |= QStyle.StateFlag.State_Sunken
+            else:
+                opt.activeSubControls = self._hoverControl
+            painter.drawComplexControl(CC_SLIDER, opt)
+        else:
+            opt.subControls = SC_GROOVE
+            if opt.tickPosition != QSlider.TickPosition.NoTicks:
+                opt.subControls |= SC_TICKMARKS
+            painter.drawComplexControl(CC_SLIDER, opt)
 
         if (
             opt.tickPosition != QSlider.TickPosition.NoTicks
@@ -327,7 +339,8 @@ class _GenericSlider(QSlider):
                     y = self.rect().center().y()
                     painter.drawRect(x, y - half_height, 1, 6)
 
-        self._draw_handle(painter, opt)
+        if not self._draw_handle_in_complex:
+            self._draw_handle(painter, opt)
 
     # ###############  Implementation Details  #######################
 

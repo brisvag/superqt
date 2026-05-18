@@ -60,6 +60,7 @@ USE_MAC_SLIDER_PATCH = (
 
 
 class _GenericSlider(QSlider):
+    # Whether the handle is drawn with the groove in a single style pass.
     _draw_handle_with_groove = True
     fvalueChanged = Signal(float)
     fsliderMoved = Signal(float)

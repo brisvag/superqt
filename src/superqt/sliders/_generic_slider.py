@@ -60,7 +60,7 @@ USE_MAC_SLIDER_PATCH = (
 
 
 class _GenericSlider(QSlider):
-    _draw_handle_in_complex = True
+    _draw_handle_with_groove = True
     fvalueChanged = Signal(float)
     fsliderMoved = Signal(float)
     frangeChanged = Signal(float, float)
@@ -302,7 +302,7 @@ class _GenericSlider(QSlider):
         opt = self._styleOption
 
         # draw groove and ticks (and handle if supported)
-        if self._draw_handle_in_complex:
+        if self._draw_handle_with_groove:
             opt.subControls = SC_GROOVE | SC_HANDLE
             if opt.tickPosition != QSlider.TickPosition.NoTicks:
                 opt.subControls |= SC_TICKMARKS
@@ -339,7 +339,7 @@ class _GenericSlider(QSlider):
                     y = self.rect().center().y()
                     painter.drawRect(x, y - half_height, 1, 6)
 
-        if not self._draw_handle_in_complex:
+        if not self._draw_handle_with_groove:
             self._draw_handle(painter, opt)
 
     # ###############  Implementation Details  #######################
